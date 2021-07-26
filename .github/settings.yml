@@ -1,0 +1,7 @@
+_extends: gh-config
+
+repository:
+  description: Portlock is a cross-process lock that is implemented with `tcp` port binding.
+  homepage: https://blog.openacid.com
+  topics: python, port, lock
+

@@ -1,20 +1,12 @@
-.. {{ name }} documentation master file, created by
+.. k3portlock documentation master file, created by
    sphinx-quickstart on Thu May 14 16:58:55 2020.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-{{ name }}
+k3portlock
 ============
 
-.. automodule:: {{ name }}
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
-.. contents::
-   :depth: 4
-   :local:
+.. automodule:: k3portlock
 
 Documentation for the Code
 **************************
@@ -22,20 +14,14 @@ Documentation for the Code
 Exceptions
 ----------
 
-.. autoexception::  SomeError
+.. autoexception::  PortlockError
 
+.. autoexception::  PortlockTimeout
 
 Classes
 ----------
 
-.. autoclass::  Bar
-    :members:
-
-
-Functions
----------
-
-.. autofunction::  foo
+.. autoclass::  Portlock
 
 Indices and tables
 ==================
