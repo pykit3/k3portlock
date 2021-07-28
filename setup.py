@@ -3,10 +3,10 @@ import setuptools
 setuptools.setup(
     name="k3portlock",
     packages=["k3portlock"],
-    version="0.1.0",
+    version="0.1.1",
     license='MIT',
-    description='Portlock is a cross-process lock that is implemented with `tcp` port binding.',
-    long_description='# k3portlock\n\n[![Action-CI](https://github.com/pykit3/k3portlock/actions/workflows/python-package.yml/badge.svg)](https://github.com/pykit3/k3portlock/actions/workflows/python-package.yml)\n[![Build Status](https://travis-ci.com/pykit3/k3portlock.svg?branch=master)](https://travis-ci.com/pykit3/k3portlock)\n[![Documentation Status](https://readthedocs.org/projects/k3portlock/badge/?version=stable)](https://k3portlock.readthedocs.io/en/stable/?badge=stable)\n[![Package](https://img.shields.io/pypi/pyversions/k3portlock)](https://pypi.org/project/k3portlock)\n\nPortlock is a cross-process lock that is implemented with `tcp` port binding.\n\nk3portlock is a component of [pykit3] project: a python3 toolkit set.\n\n\nPortlock is a cross-process lock that is implemented with `tcp` port binding.\nSince no two processes could bind on a same TCP port.\n\nPortlock tries to bind **3** ports on loopback ip `127.0.0.1`.\nIf a Portlock instance succeeds on binding **2** ports out of 3,\nit is considered this instance has acquired the lock.\n\n\n\n\n# Install\n\n```\npip install k3portlock\n```\n\n#   Author\n\nZhang Yanpo (张炎泼) <drdr.xp@gmail.com>\n\n#   Copyright and License\n\nThe MIT License (MIT)\n\nCopyright (c) 2015 Zhang Yanpo (张炎泼) <drdr.xp@gmail.com>\n\n\n[pykit3]: https://github.com/pykit3',
+    description='k3protlock is a cross-process lock that is implemented with `tcp` port binding.',
+    long_description='# k3portlock\n\n[![Action-CI](https://github.com/pykit3/k3portlock/actions/workflows/python-package.yml/badge.svg)](https://github.com/pykit3/k3portlock/actions/workflows/python-package.yml)\n[![Build Status](https://travis-ci.com/pykit3/k3portlock.svg?branch=master)](https://travis-ci.com/pykit3/k3portlock)\n[![Documentation Status](https://readthedocs.org/projects/k3portlock/badge/?version=stable)](https://k3portlock.readthedocs.io/en/stable/?badge=stable)\n[![Package](https://img.shields.io/pypi/pyversions/k3portlock)](https://pypi.org/project/k3portlock)\n\nk3portlock is a cross-process lock that is implemented with `tcp` port binding.\n\nk3portlock is a component of [pykit3] project: a python3 toolkit set.\n\n\nk3portlock is a cross-process lock that is implemented with `tcp` port binding.\nSince no two processes could bind on a same TCP port.\n\nk3portlock tries to bind **3** ports on loopback ip `127.0.0.1`.\nIf a k3portlock instance succeeds on binding **2** ports out of 3,\nit is considered this instance has acquired the lock.\n\n\n\n\n# Install\n\n```\npip install k3portlock\n```\n\n#   Author\n\nZhang Yanpo (张炎泼) <drdr.xp@gmail.com>\n\n#   Copyright and License\n\nThe MIT License (MIT)\n\nCopyright (c) 2015 Zhang Yanpo (张炎泼) <drdr.xp@gmail.com>\n\n\n[pykit3]: https://github.com/pykit3',
     long_description_content_type="text/markdown",
     author='Zhang Yanpo',
     author_email='drdr.xp@gmail.com',
@@ -14,7 +14,7 @@ setuptools.setup(
     keywords=['python', 'port', 'lock'],
     python_requires='>=3.0',
 
-    install_requires=['k3ut~=0.1.15'],
+    install_requires=['k3ut>=0.1.15,<0.2'],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
