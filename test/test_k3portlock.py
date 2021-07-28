@@ -1,6 +1,8 @@
 import threading
 import time
 import unittest
+import resource
+import hashlib
 
 import k3portlock
 import k3ut
@@ -94,13 +96,13 @@ class TestPortlock(unittest.TestCase):
                 sess['n'] += 1
                 time.sleep(0.001)
                 self.assertEqual(
-                    1,  sess['n'], "no more than 2 thread holding lock")
+                    1, sess['n'], "no more than 2 thread holding lock")
                 sess['n'] -= 1
                 l.release()
 
         lock = k3portlock.Portlock('x', timeout=100)
         ts = [threading.Thread(target=worker,
-                               args=(lock, ))
+                               args=(lock,))
               for x in range(3)]
 
         for t in ts:
@@ -128,3 +130,21 @@ class TestPortlock(unittest.TestCase):
             self.assertTrue(0.9 < t1 - t0 < 1.1,
                             'sleep_time should not affect timeout(1 sec),'
                             ' but it spends {0} seconds'.format(t1 - t0))
+
+    def test_collision(self):
+        resource.setrlimit(resource.RLIMIT_NOFILE, (102400, 102400))
+
+        dd = {}
+        ls = []
+        for i in range(1 << 15):
+            key = str(hashlib.sha1(str(i).encode("utf8")).hexdigest())
+            lck = key
+            print('lock is', i, lck)
+            l = k3portlock.Portlock(lck, timeout=8)
+            r = l.try_lock()
+            if not r:
+                print('collide', i, l.addr)
+                print(l.socks)
+
+            dd[l.addr] = i
+            ls.append(l)

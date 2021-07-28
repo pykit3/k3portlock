@@ -5,16 +5,16 @@
 [![Documentation Status](https://readthedocs.org/projects/k3portlock/badge/?version=stable)](https://k3portlock.readthedocs.io/en/stable/?badge=stable)
 [![Package](https://img.shields.io/pypi/pyversions/k3portlock)](https://pypi.org/project/k3portlock)
 
-Portlock is a cross-process lock that is implemented with `tcp` port binding.
+k3portlock is a cross-process lock that is implemented with `tcp` port binding.
 
 k3portlock is a component of [pykit3] project: a python3 toolkit set.
 
 
-Portlock is a cross-process lock that is implemented with `tcp` port binding.
+k3portlock is a cross-process lock that is implemented with `tcp` port binding.
 Since no two processes could bind on a same TCP port.
 
-Portlock tries to bind **3** ports on loopback ip `127.0.0.1`.
-If a Portlock instance succeeds on binding **2** ports out of 3,
+k3portlock tries to bind **3** ports on loopback ip `127.0.0.1`.
+If a k3portlock instance succeeds on binding **2** ports out of 3,
 it is considered this instance has acquired the lock.
 
 

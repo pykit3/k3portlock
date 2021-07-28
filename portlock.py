@@ -189,24 +189,3 @@ def str_to_addr(x):
     p = r % (PORT_RANGE[1] - PORT_RANGE[0]) + PORT_RANGE[0]
 
     return ("127.0.0.1", p)
-
-
-def test_collision():
-
-    import resource
-    resource.setrlimit(resource.RLIMIT_NOFILE, (102400, 102400))
-
-    dd = {}
-    ls = []
-    for i in range(1 << 15):
-        key = str(hashlib.sha1(str(i)).hexdigest())
-        lck = key
-        print('lock is', i, lck)
-        l = Portlock(lck, timeout=8)
-        r = l.try_lock()
-        if not r:
-            print('collide', i, l.addr)
-            print(l.socks)
-
-        dd[l.addr] = i
-        ls.append(l)
