@@ -11,7 +11,7 @@ it is considered this instance has acquired the lock.
 # from .proc import CalledProcessError
 # from .proc import ProcError
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 __name__ = "k3portlock"
 
 from .portlock import (

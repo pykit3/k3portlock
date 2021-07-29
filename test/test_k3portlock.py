@@ -136,15 +136,17 @@ class TestPortlock(unittest.TestCase):
 
         dd = {}
         ls = []
+        collision_num = 0
         for i in range(1 << 15):
             key = str(hashlib.sha1(str(i).encode("utf8")).hexdigest())
             lck = key
-            print('lock is', i, lck)
-            l = k3portlock.Portlock(lck, timeout=8)
-            r = l.try_lock()
-            if not r:
-                print('collide', i, l.addr)
-                print(l.socks)
+            lock = k3portlock.Portlock(lck, timeout=8)
+            r = lock.try_lock()
+            if r:
+                dd[lock.addr] = i
+                ls.append(lock)
+            else:
+                collision_num += 1
+        self.assertTrue((collision_num/(1 << 15)) < 0.01,
+                        "The lock collision rate should be less than the threshold of 1%")
 
-            dd[l.addr] = i
-            ls.append(l)
