@@ -1,4 +1,3 @@
-
 import errno
 import hashlib
 import logging
@@ -21,6 +20,7 @@ class PortlockError(Exception):
     """
     Super class of all Portlock exceptions.
     """
+
     pass
 
 
@@ -28,6 +28,7 @@ class PortlockTimeout(PortlockError):
     """
     Timeout when waiting to acquire the lock.
     """
+
     pass
 
 
@@ -37,6 +38,7 @@ class Portlock(object):
     Portlock is thread safe.
     It is OK to create just one lock in a process for all threads.
     """
+
     def __init__(self, key, timeout=1, sleep_time=None):
         """
         `Portlock` supports `with` statement.
@@ -59,7 +61,6 @@ class Portlock(object):
         self.thread_lock = threading.RLock()
 
     def try_lock(self):
-
         self.thread_lock.acquire()
 
         try:
@@ -81,13 +82,12 @@ class Portlock(object):
         It checks if this instances has the lock.
         :return: `True` if it has the lock.
         """
-        if OS == 'Linux':
+        if OS == "Linux":
             return self.socks[0] is not None
 
         # other OS
 
-        return len([x for x in self.socks
-                    if x is not None]) > len(self.socks) / 2
+        return len([x for x in self.socks if x is not None]) > len(self.socks) / 2
 
     def acquire(self):
         """
@@ -97,7 +97,6 @@ class Portlock(object):
         t0 = time.time()
 
         while True:
-
             if self.try_lock():
                 return
 
@@ -107,8 +106,7 @@ class Portlock(object):
                 slp = min([self.sleep_time, left + 0.001])
                 time.sleep(slp)
             else:
-                raise PortlockTimeout(
-                    'portlock timeout: ' + repr(self.key), self.key)
+                raise PortlockTimeout("portlock timeout: " + repr(self.key), self.key)
 
     def release(self):
         """
@@ -130,17 +128,16 @@ class Portlock(object):
         self.thread_lock.release()
 
     def _lock(self):
-
-        if OS == 'Linux':
+        if OS == "Linux":
             so = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             try:
-                addr = '\0/portlock/' + self.key
+                addr = "\0/portlock/" + self.key
                 so.bind(addr)
                 self.socks[0] = so
-                logger.debug('success to bind: {addr}'.format(addr=addr))
+                logger.debug("success to bind: {addr}".format(addr=addr))
             except socket.error as e:
                 if e.errno == errno.EADDRINUSE:
-                    logger.debug('failure to bind: {addr}'.format(addr=addr))
+                    logger.debug("failure to bind: {addr}".format(addr=addr))
                 else:
                     raise
 
@@ -149,7 +146,6 @@ class Portlock(object):
         # other OS
 
         for i in range(len(self.socks)):
-
             addr = (self.addr[0], self.addr[1] + i)
 
             so = self._socket()
@@ -157,10 +153,10 @@ class Portlock(object):
             try:
                 so.bind(addr)
                 self.socks[i] = so
-                logger.debug('success to bind: {addr}'.format(addr=addr))
+                logger.debug("success to bind: {addr}".format(addr=addr))
             except socket.error as e:
                 if e.errno == errno.EADDRINUSE:
-                    logger.debug('failure to bind: {addr}'.format(addr=addr))
+                    logger.debug("failure to bind: {addr}".format(addr=addr))
                 else:
                     raise
 
@@ -179,7 +175,6 @@ class Portlock(object):
 
 
 def str_to_addr(x):
-
     # builtin hash() gives bad distribution with sequencial values.
     # re-hash it with 32 bit fibonacci hash.
     # And finally embed it into ip and port

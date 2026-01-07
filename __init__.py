@@ -8,11 +8,9 @@ it is considered this instance has acquired the lock.
 
 """
 
-# from .proc import CalledProcessError
-# from .proc import ProcError
+from importlib.metadata import version
 
-__version__ = "0.1.2"
-__name__ = "k3portlock"
+__version__ = version("k3portlock")
 
 from .portlock import (
     PortlockError,
@@ -21,7 +19,7 @@ from .portlock import (
 )
 
 __all__ = [
-    'PortlockError',
-    'PortlockTimeout',
-    'Portlock',
+    "PortlockError",
+    "PortlockTimeout",
+    "Portlock",
 ]
