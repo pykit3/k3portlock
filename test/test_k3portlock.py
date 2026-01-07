@@ -117,7 +117,10 @@ class TestPortlock(unittest.TestCase):
             )
 
     def test_collision(self):
-        resource.setrlimit(resource.RLIMIT_NOFILE, (102400, 102400))
+        try:
+            resource.setrlimit(resource.RLIMIT_NOFILE, (102400, 102400))
+        except ValueError:
+            self.skipTest("Cannot set resource limits (requires elevated privileges)")
 
         dd = {}
         ls = []
