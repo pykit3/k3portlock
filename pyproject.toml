@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "k3portlock"
-version = "0.1.6"
+version = "0.1.7"
 description = "Cross-process lock using TCP port binding"
 readme = "README.md"
 license = {text = "MIT"}
