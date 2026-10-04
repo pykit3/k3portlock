@@ -1,11 +1,12 @@
+import hashlib
+import resource
 import threading
 import time
 import unittest
-import resource
-import hashlib
+
+import k3ut
 
 import k3portlock
-import k3ut
 
 dd = k3ut.dd
 
@@ -54,7 +55,7 @@ class TestPortlock(unittest.TestCase):
         def worker(lock, ident):
             for ii in range(1000):
                 lock.acquire()
-                dd("{0}-{1} start".format(ident, ii))
+                dd(f"{ident}-{ii} start")
 
                 self.assertEqual(0, sess["n"], "n is 0 just after lock is acquired, 1-lock-for-1")
 
@@ -62,7 +63,7 @@ class TestPortlock(unittest.TestCase):
                 time.sleep(0.001)
                 self.assertEqual(1, sess["n"], "no more than 2 thread holding lock")
                 sess["n"] -= 1
-                dd("{0}-{1} end".format(ident, ii))
+                dd(f"{ident}-{ii} end")
                 lock.release()
 
         ts = [threading.Thread(target=worker, args=(k3portlock.Portlock("x", timeout=100), x)) for x in range(10)]
@@ -113,7 +114,7 @@ class TestPortlock(unittest.TestCase):
 
             self.assertTrue(
                 0.9 < t1 - t0 < 1.1,
-                "sleep_time should not affect timeout(1 sec), but it spends {0} seconds".format(t1 - t0),
+                f"sleep_time should not affect timeout(1 sec), but it spends {t1 - t0} seconds",
             )
 
     def test_collision(self):

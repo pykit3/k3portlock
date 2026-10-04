@@ -20,12 +20,12 @@ pip install k3portlock
 from k3portlock import Portlock, PortlockTimeout
 
 # Using context manager (recommended)
-with Portlock('my-resource', timeout=10):
+with Portlock("my-resource", timeout=10):
     # Critical section - only one process can be here at a time
     print("Got the lock!")
 
 # Manual acquire/release
-lock = Portlock('another-resource')
+lock = Portlock("another-resource")
 try:
     lock.acquire()
     # Do work...
@@ -34,7 +34,7 @@ finally:
 
 # Handle timeout
 try:
-    with Portlock('busy-resource', timeout=5):
+    with Portlock("busy-resource", timeout=5):
         pass
 except PortlockTimeout:
     print("Could not acquire lock within 5 seconds")

@@ -21,18 +21,14 @@ class PortlockError(Exception):
     Super class of all Portlock exceptions.
     """
 
-    pass
-
 
 class PortlockTimeout(PortlockError):
     """
     Timeout when waiting to acquire the lock.
     """
 
-    pass
 
-
-class Portlock(object):
+class Portlock:
     """
     A lock instance.
     Portlock is thread safe.
@@ -120,7 +116,7 @@ class Portlock(object):
             if sock is not None:
                 try:
                     sock.close()
-                except Exception:
+                except OSError:
                     pass
 
         self.socks = [None] * PORT_N
@@ -134,10 +130,10 @@ class Portlock(object):
                 addr = "\0/portlock/" + self.key
                 so.bind(addr)
                 self.socks[0] = so
-                logger.debug("success to bind: {addr}".format(addr=addr))
-            except socket.error as e:
+                logger.debug(f"success to bind: {addr}")
+            except OSError as e:
                 if e.errno == errno.EADDRINUSE:
-                    logger.debug("failure to bind: {addr}".format(addr=addr))
+                    logger.debug(f"failure to bind: {addr}")
                 else:
                     raise
 
@@ -153,10 +149,10 @@ class Portlock(object):
             try:
                 so.bind(addr)
                 self.socks[i] = so
-                logger.debug("success to bind: {addr}".format(addr=addr))
-            except socket.error as e:
+                logger.debug(f"success to bind: {addr}")
+            except OSError as e:
                 if e.errno == errno.EADDRINUSE:
-                    logger.debug("failure to bind: {addr}".format(addr=addr))
+                    logger.debug(f"failure to bind: {addr}")
                 else:
                     raise
 

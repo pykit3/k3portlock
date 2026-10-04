@@ -13,13 +13,13 @@ from importlib.metadata import version
 __version__ = version("k3portlock")
 
 from .portlock import (
+    Portlock,
     PortlockError,
     PortlockTimeout,
-    Portlock,
 )
 
 __all__ = [
+    "Portlock",
     "PortlockError",
     "PortlockTimeout",
-    "Portlock",
 ]

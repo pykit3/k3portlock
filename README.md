@@ -28,14 +28,13 @@ pip install k3portlock
 # Synopsis
 
 ```python
-
 #!/usr/bin/env python
 
 import time
+
 import k3portlock
 
 if __name__ == "__main__":
-
     # Basic lock acquisition and release
     lock = k3portlock.Portlock("mylock")
 
@@ -74,7 +73,6 @@ if __name__ == "__main__":
     another_lock = k3portlock.Portlock("testlock")
     print(another_lock.has_locked())  # False (different instance)
     lock4.release()
-
 ```
 
 #   Author

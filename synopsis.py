@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 import time
+
 import k3portlock
 
 if __name__ == "__main__":
-
     # Basic lock acquisition and release
     lock = k3portlock.Portlock("mylock")
 
