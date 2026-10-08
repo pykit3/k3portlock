@@ -4,7 +4,7 @@
 [![Documentation Status](https://readthedocs.org/projects/k3portlock/badge/?version=stable)](https://k3portlock.readthedocs.io/en/stable/?badge=stable)
 [![Package](https://img.shields.io/pypi/pyversions/k3portlock)](https://pypi.org/project/k3portlock)
 
-Cross-process lock using TCP port binding.
+Cross-process lock using socket binding.
 
 k3portlock is a component of [pykit3](https://github.com/pykit3) project: a python3 toolkit set.
 

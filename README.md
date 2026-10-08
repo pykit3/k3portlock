@@ -4,17 +4,34 @@
 [![Documentation Status](https://readthedocs.org/projects/k3portlock/badge/?version=stable)](https://k3portlock.readthedocs.io/en/stable/?badge=stable)
 [![Package](https://img.shields.io/pypi/pyversions/k3portlock)](https://pypi.org/project/k3portlock)
 
-k3protlock is a cross-process lock that is implemented with `tcp` port binding.
+k3portlock is a cross-process lock that is implemented with socket binding.
 
 k3portlock is a component of [pykit3] project: a python3 toolkit set.
 
 
-k3portlock is a cross-process lock that is implemented with `tcp` port binding.
-Since no two processes could bind on a same TCP port.
+k3portlock is a cross-process lock that is implemented with socket binding.
+No two sockets can bind the same address, so whoever binds the address of a key
+holds the lock of that key.
 
-k3portlock tries to bind **3** ports on loopback ip `127.0.0.1`.
+On Linux, the address is the abstract Unix socket `/portlock/<key>`.
+Only processes in the same network namespace share these locks.
+A container with its own network does not see the locks of the host.
+
+On other systems, k3portlock hashes the key to one of 20000 base ports in
+`[40000, 60000)`.
+k3portlock tries to bind **3** ports from the base port on loopback ip `127.0.0.1`.
 If a Portlock instance succeeds on binding **2** ports out of 3,
 it is considered this instance has acquired the lock.
+Two different keys whose base ports are less than 3 apart can block each other,
+and so can other programs that bind these ports.
+With 100 keys in use at once, about one pair of keys is that close.
+A collision looks like a lock held by another process.
+`try_lock()` returns `False`, and `acquire()` raises `PortlockTimeout` unless the
+other lock is released in time.
+
+A lock lives as long as its socket.
+`release()` or the exit of the process closes the socket and frees the lock,
+so a killed process never leaves a stale lock.
 
 
 

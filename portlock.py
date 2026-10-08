@@ -43,7 +43,7 @@ class Portlock:
         automatically.
 
         And when leaving `with` block, `release()` will be called to release the lock.
-        :param key: is a string as lock key.`key` will be hashed to a certain port
+        :param key: is a string as lock key.
         :param timeout: is the max time in second to wait to acquire the lock.
         it raises an `portlock.PortlockTimeout` exception.
         :param sleep_time: is the time in second between every two attempts to bind a port.
