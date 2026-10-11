@@ -99,6 +99,33 @@ class TestPortlock(unittest.TestCase):
         for t in ts:
             t.join()
 
+    def test_shared_instance_timeout(self):
+        # One instance is shared by threads: a thread waiting for another one's lock still times out.
+        lock = k3portlock.Portlock("shared-timeout", timeout=0.1)
+        held = threading.Event()
+        done = threading.Event()
+
+        def holder():
+            with lock:
+                held.set()
+                done.wait(5)
+
+        th = threading.Thread(target=holder)
+        th.start()
+        held.wait()
+
+        t0 = time.monotonic()
+        with self.assertRaises(k3portlock.PortlockTimeout):
+            lock.acquire()
+        spent = time.monotonic() - t0
+
+        self.assertFalse(lock.try_lock())
+
+        done.set()
+        th.join()
+
+        self.assertLess(spent, 1)
+
     def test_sleep_time(self):
         lock0 = k3portlock.Portlock("x")
         lock = k3portlock.Portlock("x", timeout=1, sleep_time=2)

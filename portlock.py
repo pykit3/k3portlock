@@ -57,7 +57,9 @@ class Portlock:
         self.thread_lock = threading.RLock()
 
     def try_lock(self):
-        self.thread_lock.acquire()
+        # Another thread that holds this instance makes it fail at once, so acquire() keeps its timeout.
+        if not self.thread_lock.acquire(blocking=False):
+            return False
 
         try:
             self._lock()
