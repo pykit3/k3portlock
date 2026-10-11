@@ -1,14 +1,47 @@
+import errno
 import hashlib
+import os
 import resource
 import threading
 import time
 import unittest
+from unittest import mock
 
 import k3ut
 
 import k3portlock
 
 dd = k3ut.dd
+
+
+class FakeSocket:
+    # bind() fails with the errno that errs gives for the address.
+
+    def __init__(self, errs):
+        self.errs = errs
+
+    def bind(self, addr):
+        err = self.errs.get(addr)
+        if err is None:
+            return
+        raise OSError(err, os.strerror(err))
+
+    def close(self):
+        pass
+
+
+def try_lock_in_thread(lock):
+    # The thread lock of an instance is re-entrant, so only another thread shows whether the instance is free.
+    rst = []
+
+    def worker():
+        rst.append(lock.try_lock())
+        lock.release()
+
+    th = threading.Thread(target=worker)
+    th.start()
+    th.join()
+    return rst[0]
 
 
 class TestPortlock(unittest.TestCase):
@@ -125,6 +158,57 @@ class TestPortlock(unittest.TestCase):
         th.join()
 
         self.assertLess(spent, 1)
+
+    def test_majority_of_ports(self):
+        # On a system other than Linux, the lock needs 2 of its 3 ports, and another program can hold any of them.
+        lock = k3portlock.Portlock("majority")
+        ip, port = lock.addr
+        cases = (
+            ((), True),
+            ((0,), True),
+            ((1,), True),
+            ((2,), True),
+            ((0, 1), False),
+            ((0, 2), False),
+            ((1, 2), False),
+            ((0, 1, 2), False),
+        )
+
+        with mock.patch.object(k3portlock.portlock, "OS", "Darwin"):
+            for busy, expected in cases:
+                dd("busy ports:", busy)
+                errs = {(ip, port + i): errno.EADDRINUSE for i in busy}
+                with mock.patch("socket.socket", return_value=FakeSocket(errs)):
+                    rst = lock.try_lock()
+                    self.assertEqual(expected, rst)
+                    self.assertEqual(expected, lock.has_locked())
+                    lock.release()
+
+            # No failed attempt keeps the instance.
+            with mock.patch("socket.socket", return_value=FakeSocket({})):
+                self.assertTrue(try_lock_in_thread(lock))
+
+    def test_bind_error(self):
+        # A bind error other than EADDRINUSE propagates, and the failed attempt does not keep the instance.
+        lock = k3portlock.Portlock("bind-error")
+        ip, port = lock.addr
+        cases = (
+            ("Linux", "\0/portlock/bind-error"),
+            ("Darwin", (ip, port + 1)),
+        )
+
+        for os_name, addr in cases:
+            dd("OS:", os_name)
+            with mock.patch.object(k3portlock.portlock, "OS", os_name):
+                fake = FakeSocket({addr: errno.EACCES})
+                with mock.patch("socket.socket", return_value=fake), self.assertRaises(OSError) as ctx:
+                    lock.try_lock()
+
+                self.assertEqual(errno.EACCES, ctx.exception.errno)
+                self.assertFalse(lock.has_locked())
+
+                with mock.patch("socket.socket", return_value=FakeSocket({})):
+                    self.assertTrue(try_lock_in_thread(lock))
 
     def test_sleep_time(self):
         lock0 = k3portlock.Portlock("x")
