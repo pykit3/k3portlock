@@ -1,5 +1,6 @@
 import errno
 import hashlib
+import itertools
 import os
 import resource
 import threading
@@ -209,6 +210,16 @@ class TestPortlock(unittest.TestCase):
 
                 with mock.patch("socket.socket", return_value=FakeSocket({})):
                     self.assertTrue(try_lock_in_thread(lock))
+
+    def test_acquire_ignores_wall_clock(self):
+        # A wall clock that jumps forward between two attempts does not end the wait.
+        lock = k3portlock.Portlock("wall-clock", timeout=5)
+        lock.try_lock = mock.Mock(side_effect=[False, True])
+
+        with mock.patch("time.time", side_effect=itertools.count(0, 1000)):
+            lock.acquire()
+
+        self.assertEqual(2, lock.try_lock.call_count)
 
     def test_sleep_time(self):
         lock0 = k3portlock.Portlock("x")

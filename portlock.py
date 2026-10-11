@@ -92,13 +92,13 @@ class Portlock:
         It tries to acquire the lock before `timeout`.
         :return: nothing
         """
-        t0 = time.time()
+        t0 = time.monotonic()
 
         while True:
             if self.try_lock():
                 return
 
-            now = time.time()
+            now = time.monotonic()
             left = t0 + self.timeout - now
             if left > 0:
                 slp = min([self.sleep_time, left + 0.001])
