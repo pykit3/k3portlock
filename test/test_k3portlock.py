@@ -239,6 +239,8 @@ class TestPortlock(unittest.TestCase):
                 f"sleep_time should not affect timeout(1 sec), but it spends {t1 - t0} seconds",
             )
 
+    # Outside Linux each lock binds 2 of the 20000 ports in PORT_RANGE, so at most about 10000 locks exist together.
+    @unittest.skipUnless(k3portlock.portlock.OS == "Linux", "1 << 15 locks fit only in Linux abstract Unix sockets")
     def test_collision(self):
         try:
             resource.setrlimit(resource.RLIMIT_NOFILE, (102400, 102400))
