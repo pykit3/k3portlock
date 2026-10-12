@@ -242,15 +242,22 @@ class TestPortlock(unittest.TestCase):
     # Outside Linux each lock binds 2 of the 20000 ports in PORT_RANGE, so at most about 10000 locks exist together.
     @unittest.skipUnless(k3portlock.portlock.OS == "Linux", "1 << 15 locks fit only in Linux abstract Unix sockets")
     def test_collision(self):
-        try:
-            resource.setrlimit(resource.RLIMIT_NOFILE, (102400, 102400))
-        except ValueError:
-            self.skipTest("Cannot set resource limits (requires elevated privileges)")
+        n_lock = 1 << 15
+
+        # Each lock holds one socket, and the rest of the process needs some more files.
+        n_file = n_lock + 1024
+        soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+        if hard < n_file:
+            self.skipTest(f"{n_file} open files are needed, but RLIMIT_NOFILE allows only {hard}")
+
+        # A process may raise its soft limit up to its hard limit without privileges.
+        new_soft = max(soft, n_file)
+        resource.setrlimit(resource.RLIMIT_NOFILE, (new_soft, hard))
 
         dd = {}
         ls = []
         collision_num = 0
-        for i in range(1 << 15):
+        for i in range(n_lock):
             key = str(hashlib.sha1(str(i).encode("utf8")).hexdigest())
             lck = key
             lock = k3portlock.Portlock(lck, timeout=8)
@@ -261,5 +268,5 @@ class TestPortlock(unittest.TestCase):
             else:
                 collision_num += 1
         self.assertTrue(
-            (collision_num / (1 << 15)) < 0.01, "The lock collision rate should be less than the threshold of 1%"
+            (collision_num / n_lock) < 0.01, "The lock collision rate should be less than the threshold of 1%"
         )
