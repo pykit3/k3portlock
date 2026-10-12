@@ -54,9 +54,17 @@ class Portlock:
         self.sleep_time = sleep_time or DEFAULT_SLEEP_TIME
         self.socks = [None] * PORT_N
 
-        self.thread_lock = threading.RLock()
+        # Like threading.RLock: the thread that holds this instance, and how many times it acquired it.
+        self.owner = None
+        self.depth = 0
+        self.thread_lock = threading.Lock()
 
     def try_lock(self):
+        me = threading.get_ident()
+        if self.owner == me:
+            self.depth += 1
+            return True
+
         # Another thread that holds this instance makes it fail at once, so acquire() keeps its timeout.
         if not self.thread_lock.acquire(blocking=False):
             return False
@@ -65,13 +73,16 @@ class Portlock:
             self._lock()
 
             if self.has_locked():
+                self.owner = me
+                self.depth = 1
                 return True
             else:
-                self.socks = [None] * PORT_N
+                self._close()
                 self.thread_lock.release()
                 return False
 
         except Exception:
+            self._close()
             self.thread_lock.release()
             raise
 
@@ -108,12 +119,27 @@ class Portlock:
 
     def release(self):
         """
-        It releases the lock it holds, or does nothing if it does not hold the lock.
+        It releases the lock once, or does nothing if this instance does not hold the lock.
+        Like `threading.RLock`, a thread that acquired the lock `n` times frees it with the `n`-th `release()`.
+        It raises `RuntimeError` if another thread holds the lock, and then it closes no socket.
         :return: nothing
         """
-        if not self.has_locked():
+        owner = self.owner
+        if owner is None:
             return
 
+        if owner != threading.get_ident():
+            raise RuntimeError(f"portlock {self.key!r} is held by another thread")
+
+        self.depth -= 1
+        if self.depth > 0:
+            return
+
+        self.owner = None
+        self._close()
+        self.thread_lock.release()
+
+    def _close(self):
         for sock in self.socks:
             if sock is not None:
                 try:
@@ -122,8 +148,6 @@ class Portlock:
                     pass
 
         self.socks = [None] * PORT_N
-
-        self.thread_lock.release()
 
     def _lock(self):
         if OS == "Linux":
@@ -169,7 +193,8 @@ class Portlock:
         self.release()
 
     def __del__(self):
-        self.release()
+        # The garbage collector may run this in any thread, where release() would raise.
+        self._close()
 
 
 def str_to_addr(x):

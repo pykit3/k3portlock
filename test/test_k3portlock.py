@@ -20,6 +20,7 @@ class FakeSocket:
 
     def __init__(self, errs):
         self.errs = errs
+        self.n_close = 0
 
     def bind(self, addr):
         err = self.errs.get(addr)
@@ -28,16 +29,18 @@ class FakeSocket:
         raise OSError(err, os.strerror(err))
 
     def close(self):
-        pass
+        self.n_close += 1
 
 
 def try_lock_in_thread(lock):
-    # The thread lock of an instance is re-entrant, so only another thread shows whether the instance is free.
+    # An instance is re-entrant, so only another thread shows whether the instance is free.
     rst = []
 
     def worker():
-        rst.append(lock.try_lock())
-        lock.release()
+        locked = lock.try_lock()
+        rst.append(locked)
+        if locked:
+            lock.release()
 
     th = threading.Thread(target=worker)
     th.start()
@@ -160,6 +163,49 @@ class TestPortlock(unittest.TestCase):
 
         self.assertLess(spent, 1)
 
+    def test_acquire_twice(self):
+        # The thread that holds an instance acquires it again, and only the second release() frees the lock.
+        a = k3portlock.Portlock("acquire-twice")
+        b = k3portlock.Portlock("acquire-twice")
+
+        a.acquire()
+        a.acquire()
+
+        a.release()
+        self.assertTrue(a.has_locked())
+        self.assertFalse(b.try_lock())
+        self.assertFalse(try_lock_in_thread(a))
+
+        a.release()
+        self.assertFalse(a.has_locked())
+        self.assertTrue(try_lock_in_thread(a))
+        self.assertTrue(b.try_lock())
+        b.release()
+
+    def test_release_in_other_thread(self):
+        # release() in a thread that does not hold the instance raises, and the holder keeps the lock.
+        a = k3portlock.Portlock("other-thread")
+        b = k3portlock.Portlock("other-thread")
+        errs = []
+
+        def worker():
+            try:
+                a.release()
+            except RuntimeError as e:
+                errs.append(str(e))
+
+        with a:
+            th = threading.Thread(target=worker)
+            th.start()
+            th.join()
+
+            self.assertEqual(["portlock 'other-thread' is held by another thread"], errs)
+            self.assertTrue(a.has_locked())
+            self.assertFalse(b.try_lock())
+
+        self.assertTrue(b.try_lock())
+        b.release()
+
     def test_majority_of_ports(self):
         # On a system other than Linux, the lock needs 2 of its 3 ports, and another program can hold any of them.
         lock = k3portlock.Portlock("majority")
@@ -179,11 +225,15 @@ class TestPortlock(unittest.TestCase):
             for busy, expected in cases:
                 dd("busy ports:", busy)
                 errs = {(ip, port + i): errno.EADDRINUSE for i in busy}
-                with mock.patch("socket.socket", return_value=FakeSocket(errs)):
+                fake = FakeSocket(errs)
+                with mock.patch("socket.socket", return_value=fake):
                     rst = lock.try_lock()
                     self.assertEqual(expected, rst)
                     self.assertEqual(expected, lock.has_locked())
                     lock.release()
+
+                # Every bound socket is closed, also when the attempt fails.
+                self.assertEqual(k3portlock.portlock.PORT_N - len(busy), fake.n_close)
 
             # No failed attempt keeps the instance.
             with mock.patch("socket.socket", return_value=FakeSocket({})):
